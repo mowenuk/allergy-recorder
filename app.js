@@ -1,5 +1,37 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
 let reactions = [];
 let editingReactionId = null;
+let db;
+let userId = null;
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAg9cTGFnhnKUf4VqzTIl9OEQT8qgliQcw",
+  authDomain: "allergytracker-f8d9f.firebaseapp.com",
+  projectId: "allergytracker-f8d9f",
+  storageBucket: "allergytracker-f8d9f.appspot.com",
+  messagingSenderId: "155088881087",
+  appId: "1:155088881087:web:88a6fea927f66154010d0a",
+  measurementId: "G-0QT3LSY4EL"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+db = getFirestore(app);
+
+// Sign in anonymously
+signInAnonymously(auth)
+  .then((userCredential) => {
+    userId = userCredential.user.uid;
+    loadReactions();
+  })
+  .catch((error) => {
+    console.error("Error signing in anonymously:", error);
+  });
 
 // Function to set the default date and time
 function setDefaultDateTime() {
@@ -49,7 +81,7 @@ function fetchProductData() {
     });
 }
 
-function addOrUpdateReaction() {
+async function addOrUpdateReaction() {
   const productInput = document.getElementById('product').value.trim();
   const ingredientsInput = document.getElementById('ingredients').value.trim();
   const severityInput = document.getElementById('severity').value.trim();
@@ -62,6 +94,7 @@ function addOrUpdateReaction() {
   }
 
   const reactionData = {
+    userId: userId,
     product: productInput,
     ingredients: [...new Set(ingredientsInput.split(',').map(i => i.trim().toLowerCase()))], // Ensure unique ingredients within a product
     severity: parseInt(severityInput),
@@ -70,17 +103,29 @@ function addOrUpdateReaction() {
   };
 
   if (editingReactionId !== null) {
-    reactions[editingReactionId] = reactionData;
+    const reactionDoc = doc(db, "reactions", editingReactionId);
+    await updateDoc(reactionDoc, reactionData);
     editingReactionId = null;
   } else {
-    reactions.push(reactionData);
+    await addDoc(collection(db, "reactions"), reactionData);
   }
+
+  loadReactions();
+  clearForm();
+}
+
+async function loadReactions() {
+  const querySnapshot = await getDocs(collection(db, "reactions"));
+  reactions = [];
+
+  querySnapshot.forEach((doc) => {
+    if (doc.data().userId === userId) {
+      reactions.push({ id: doc.id, ...doc.data() });
+    }
+  });
 
   displayReactions();
   findDuplicatedIngredients();
-  
-  // Clear the form after saving the reaction
-  clearForm();
 }
 
 function displayReactions() {
@@ -96,28 +141,27 @@ function displayReactions() {
       <td>${reaction.notes}</td>
       <td>${reaction.dateTime}</td>
       <td>
-        <button onclick="editReaction(${index})">Edit</button>
-        <button onclick="deleteReaction(${index})">Delete</button>
+        <button onclick="editReaction('${reaction.id}')">Edit</button>
+        <button onclick="deleteReaction('${reaction.id}')">Delete</button>
       </td>
     `;
     tableBody.appendChild(row);
   });
 }
 
-function editReaction(index) {
-  const reaction = reactions[index];
+function editReaction(reactionId) {
+  const reaction = reactions.find(r => r.id === reactionId);
   document.getElementById('product').value = reaction.product;
   document.getElementById('ingredients').value = reaction.ingredients.join(', ');
   document.getElementById('severity').value = reaction.severity;
   document.getElementById('notes').value = reaction.notes;
   document.getElementById('reactionDate').value = new Date(reaction.dateTime).toISOString().slice(0, 16);
-  editingReactionId = index;
+  editingReactionId = reactionId;
 }
 
-function deleteReaction(index) {
-  reactions.splice(index, 1);
-  displayReactions();
-  findDuplicatedIngredients();
+async function deleteReaction(reactionId) {
+  await deleteDoc(doc(db, "reactions", reactionId));
+  loadReactions();
 }
 
 function clearForm() {
