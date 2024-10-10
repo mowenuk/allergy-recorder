@@ -1,7 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
+// Initialize Firebase using global namespace instead of imports
 let reactions = [];
 let editingReactionId = null;
 let db;
@@ -18,20 +15,23 @@ const firebaseConfig = {
   measurementId: "G-0QT3LSY4EL"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-db = getFirestore(app);
+window.onload = function () {
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
 
-// Sign in anonymously
-signInAnonymously(auth)
-  .then((userCredential) => {
-    userId = userCredential.user.uid;
-    loadReactions();
-  })
-  .catch((error) => {
-    console.error("Error signing in anonymously:", error);
-  });
+  // Sign in anonymously
+  firebase.auth().signInAnonymously()
+    .then((userCredential) => {
+      userId = userCredential.user.uid;
+      loadReactions();
+    })
+    .catch((error) => {
+      console.error("Error signing in anonymously:", error);
+    });
+
+  setDefaultDateTime();
+};
 
 // Function to set the default date and time
 function setDefaultDateTime() {
@@ -103,11 +103,11 @@ async function addOrUpdateReaction() {
   };
 
   if (editingReactionId !== null) {
-    const reactionDoc = doc(db, "reactions", editingReactionId);
-    await updateDoc(reactionDoc, reactionData);
+    const reactionDoc = db.collection("reactions").doc(editingReactionId);
+    await reactionDoc.update(reactionData);
     editingReactionId = null;
   } else {
-    await addDoc(collection(db, "reactions"), reactionData);
+    await db.collection("reactions").add(reactionData);
   }
 
   loadReactions();
@@ -116,7 +116,7 @@ async function addOrUpdateReaction() {
 
 async function loadReactions() {
   try {
-    const querySnapshot = await getDocs(collection(db, "reactions"));
+    const querySnapshot = await db.collection("reactions").get();
     reactions = [];
 
     querySnapshot.forEach((doc) => {
@@ -165,7 +165,7 @@ function editReaction(reactionId) {
 
 async function deleteReaction(reactionId) {
   try {
-    await deleteDoc(doc(db, "reactions", reactionId));
+    await db.collection("reactions").doc(reactionId).delete();
     loadReactions();
   } catch (error) {
     console.error("Error deleting reaction:", error);
