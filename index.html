@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allergy Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Allergy Tracker</h2>
+    <p>Enter the product barcode to fetch the name, ingredients, and photo, or manually enter them. Add notes and record the date and time of the reaction.</p>
+
+    <div class="form-group">
+      <label for="barcode">Product Barcode:</label>
+      <input type="text" id="barcode" placeholder="e.g., 737628064502">
+      <button onclick="fetchProductData()">Fetch Product Data</button>
+    </div>
+
+    <div class="form-group">
+      <label for="product">Product Name:</label>
+      <input type="text" id="product" placeholder="e.g., Cereal, Snack Bar">
+    </div>
+
+    <div class="form-group">
+      <label for="ingredients">Ingredients (comma-separated):</label>
+      <input type="text" id="ingredients" placeholder="e.g., milk, eggs, wheat">
+    </div>
+
+    <div class="form-group">
+      <label for="severity">Reaction Severity (1-10):</label>
+      <input type="number" id="severity" min="1" max="10" placeholder="e.g., 5">
+    </div>
+
+    <div class="form-group">
+      <label for="notes">Reaction Notes (describe the severity):</label>
+      <textarea id="notes" placeholder="Describe the symptoms or reaction"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="reactionDate">Reaction Date & Time:</label>
+      <input type="datetime-local" id="reactionDate">
+    </div>
+
+    <img id="productImage" src="" alt="Product Image" style="display: none;">
+
+    <button onclick="addOrUpdateReaction()">Save Reaction</button>
+
+    <div class="reaction-list">
+      <h3>Recorded Reactions</h3>
+      <table id="reactionTable">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Ingredients</th>
+            <th>Severity</th>
+            <th>Notes</th>
+            <th>Date & Time</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="commonIngredients" class="common-ingredients" style="display:none;">
+      <h3>Potential Allergens</h3>
+      <p>These ingredients have appeared in multiple reactions:</p>
+      <ul id="commonIngredientsList"></ul>
+    </div>
+  </div>
+</body>
+</html>
