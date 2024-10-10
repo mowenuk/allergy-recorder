@@ -68,3 +68,10 @@ th {
   max-width: 150px;
   margin-top: 15px;
 }
+
+#noImageText {
+  display: none;
+  margin-top: 15px;
+  font-weight: bold;
+  color: #888;
+}
