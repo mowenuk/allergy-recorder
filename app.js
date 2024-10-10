@@ -111,6 +111,7 @@ function editReaction(index) {
 function deleteReaction(index) {
   reactions.splice(index, 1);
   displayReactions();
+  findDuplicatedIngredients();
 }
 
 function clearForm() {
