@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Allergy Tracker</title>
   <link rel="stylesheet" href="style.css">
-  <script defer src="app.js"></script>
 </head>
-<body>
+<body onload="setDefaultDateTime()">
   <div class="container">
     <h2>Allergy Tracker</h2>
     <p>Enter the product barcode to fetch the name, ingredients, and photo, or manually enter them. Add notes and record the date and time of the reaction.</p>
@@ -30,12 +29,12 @@
 
     <div class="form-group">
       <label for="severity">Reaction Severity (1-10):</label>
-      <input type="number" id="severity" min="1" max="10" placeholder="e.g., 5">
+      <input type="number" id="severity" min="1" max="10" value="5">
     </div>
 
     <div class="form-group">
       <label for="notes">Reaction Notes (describe the severity):</label>
-      <textarea id="notes" placeholder="Describe the symptoms or reaction"></textarea>
+      <textarea id="notes" placeholder="Describe the symptoms or reaction">Describe the symptoms or reaction</textarea>
     </div>
 
     <div class="form-group">
@@ -44,10 +43,12 @@
     </div>
 
     <img id="productImage" src="" alt="Product Image" style="display: none;">
+    <div id="noImageText">&lt;no image available&gt;</div>
 
     <button onclick="addOrUpdateReaction()">Save Reaction</button>
+    <button onclick="toggleReactionsTable()">Show/Hide Recorded Reactions</button>
 
-    <div class="reaction-list">
+    <div class="reaction-list" id="reactionList">
       <h3>Recorded Reactions</h3>
       <table id="reactionTable">
         <thead>
@@ -71,5 +72,7 @@
       <ul id="commonIngredientsList"></ul>
     </div>
   </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
