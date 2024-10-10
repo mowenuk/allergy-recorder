@@ -143,17 +143,20 @@ function toggleReactionsTable() {
 function findDuplicatedIngredients() {
   let ingredientCount = {};
 
-  // Loop through all reactions to count ingredient occurrences, only count each ingredient once per product
-  reactions.forEach(reaction => {
-    const uniqueIngredients = [...new Set(reaction.ingredients)];
-    uniqueIngredients.forEach(ingredient => {
-      if (ingredientCount[ingredient]) {
-        ingredientCount[ingredient]++;
-      } else {
-        ingredientCount[ingredient] = 1;
-      }
+  // Only count ingredients if they appear in more than one reaction
+  if (reactions.length > 1) {
+    // Loop through all reactions to count ingredient occurrences, only count each ingredient once per product
+    reactions.forEach(reaction => {
+      const uniqueIngredients = [...new Set(reaction.ingredients)];
+      uniqueIngredients.forEach(ingredient => {
+        if (ingredientCount[ingredient]) {
+          ingredientCount[ingredient]++;
+        } else {
+          ingredientCount[ingredient] = 1;
+        }
+      });
     });
-  });
+  }
 
   // Filter ingredients that appear more than once across different reactions
   const duplicatedIngredients = Object.keys(ingredientCount).filter(ingredient => ingredientCount[ingredient] > 1);
