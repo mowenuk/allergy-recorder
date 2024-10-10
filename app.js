@@ -115,17 +115,21 @@ async function addOrUpdateReaction() {
 }
 
 async function loadReactions() {
-  const querySnapshot = await getDocs(collection(db, "reactions"));
-  reactions = [];
+  try {
+    const querySnapshot = await getDocs(collection(db, "reactions"));
+    reactions = [];
 
-  querySnapshot.forEach((doc) => {
-    if (doc.data().userId === userId) {
-      reactions.push({ id: doc.id, ...doc.data() });
-    }
-  });
+    querySnapshot.forEach((doc) => {
+      if (doc.data().userId === userId) {
+        reactions.push({ id: doc.id, ...doc.data() });
+      }
+    });
 
-  displayReactions();
-  findDuplicatedIngredients();
+    displayReactions();
+    findDuplicatedIngredients();
+  } catch (error) {
+    console.error("Error loading reactions from the database:", error);
+  }
 }
 
 function displayReactions() {
@@ -160,8 +164,12 @@ function editReaction(reactionId) {
 }
 
 async function deleteReaction(reactionId) {
-  await deleteDoc(doc(db, "reactions", reactionId));
-  loadReactions();
+  try {
+    await deleteDoc(doc(db, "reactions", reactionId));
+    loadReactions();
+  } catch (error) {
+    console.error("Error deleting reaction:", error);
+  }
 }
 
 function clearForm() {
