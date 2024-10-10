@@ -4,8 +4,14 @@ let editingReactionId = null;
 // Function to set the default date and time
 function setDefaultDateTime() {
   const now = new Date();
-  const offset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
-  const localDateTime = new Date(now - offset).toISOString().slice(0, 16); // Format to YYYY-MM-DDTHH:MM
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is zero-based
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  
+  // Format: YYYY-MM-DDTHH:MM
+  const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
   document.getElementById('reactionDate').value = localDateTime;
 }
 
