@@ -1,6 +1,14 @@
 let reactions = [];
 let editingReactionId = null;
 
+// Function to set the default date and time
+function setDefaultDateTime() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
+  const localDateTime = new Date(now - offset).toISOString().slice(0, 16); // Format to YYYY-MM-DDTHH:MM
+  document.getElementById('reactionDate').value = localDateTime;
+}
+
 function fetchProductData() {
   const barcode = document.getElementById('barcode').value.trim();
   if (!barcode) {
@@ -15,11 +23,16 @@ function fetchProductData() {
     .then(data => {
       if (data.product) {
         document.getElementById('product').value = data.product.product_name || 'Unknown Product';
-        const ingredientsList = data.product.ingredients.map(i => i.text).join(', ');
+        const ingredientsList = data.product.ingredients ? data.product.ingredients.map(i => i.text).join(', ') : '';
         document.getElementById('ingredients').value = ingredientsList;
+
         if (data.product.image_url) {
           document.getElementById('productImage').src = data.product.image_url;
           document.getElementById('productImage').style.display = 'block';
+          document.getElementById('noImageText').style.display = 'none';
+        } else {
+          document.getElementById('productImage').style.display = 'none';
+          document.getElementById('noImageText').style.display = 'block';
         }
       } else {
         alert("Product not found.");
@@ -44,7 +57,7 @@ function addOrUpdateReaction() {
 
   const reactionData = {
     product: productInput,
-    ingredients: ingredientsInput.split(',').map(i => i.trim().toLowerCase()),
+    ingredients: [...new Set(ingredientsInput.split(',').map(i => i.trim().toLowerCase()))], // Ensure unique ingredients within a product
     severity: parseInt(severityInput),
     notes: notesInput,
     dateTime: new Date(reactionDateInput).toLocaleString(),
@@ -57,12 +70,13 @@ function addOrUpdateReaction() {
     reactions.push(reactionData);
   }
 
-  clearForm();
   displayReactions();
-  findCommonIngredients(reactionData.ingredients);
+  findDuplicatedIngredients();
+  
+  // Clear the form after saving the reaction
+  clearForm();
 }
 
-// Function to display all reactions
 function displayReactions() {
   const tableBody = document.querySelector("#reactionTable tbody");
   tableBody.innerHTML = '';
@@ -84,7 +98,6 @@ function displayReactions() {
   });
 }
 
-// Function to edit a reaction
 function editReaction(index) {
   const reaction = reactions[index];
   document.getElementById('product').value = reaction.product;
@@ -95,41 +108,55 @@ function editReaction(index) {
   editingReactionId = index;
 }
 
-// Function to delete a reaction
 function deleteReaction(index) {
   reactions.splice(index, 1);
   displayReactions();
 }
 
-// Function to clear the form fields
 function clearForm() {
   document.getElementById('product').value = '';
   document.getElementById('ingredients').value = '';
-  document.getElementById('severity').value = '';
-  document.getElementById('notes').value = '';
-  document.getElementById('reactionDate').value = '';
+  document.getElementById('severity').value = '5';
+  document.getElementById('notes').value = 'Describe the symptoms or reaction';
+  setDefaultDateTime();
+  document.getElementById('productImage').style.display = 'none';
+  document.getElementById('noImageText').style.display = 'none';
 }
 
-// Function to find and display common ingredients that appeared in previous reactions
-function findCommonIngredients(newIngredients) {
-  let commonIngredients = [];
+function toggleReactionsTable() {
+  const reactionList = document.getElementById('reactionList');
+  if (reactionList.style.display === 'none') {
+    reactionList.style.display = 'block';
+  } else {
+    reactionList.style.display = 'none';
+  }
+}
 
-  // Loop through previous reactions to find common ingredients
+// Function to find and display only duplicated ingredients across different reactions
+function findDuplicatedIngredients() {
+  let ingredientCount = {};
+
+  // Loop through all reactions to count ingredient occurrences, only count each ingredient once per product
   reactions.forEach(reaction => {
-    reaction.ingredients.forEach(ingredient => {
-      if (newIngredients.includes(ingredient)) {
-        commonIngredients.push(ingredient);
+    const uniqueIngredients = [...new Set(reaction.ingredients)];
+    uniqueIngredients.forEach(ingredient => {
+      if (ingredientCount[ingredient]) {
+        ingredientCount[ingredient]++;
+      } else {
+        ingredientCount[ingredient] = 1;
       }
     });
   });
 
-  // Display common ingredients
+  // Filter ingredients that appear more than once across different reactions
+  const duplicatedIngredients = Object.keys(ingredientCount).filter(ingredient => ingredientCount[ingredient] > 1);
+
+  // Display the duplicated ingredients
   const commonIngredientsList = document.getElementById('commonIngredientsList');
   commonIngredientsList.innerHTML = ''; // Clear the previous list
 
-  if (commonIngredients.length > 0) {
-    const uniqueCommonIngredients = [...new Set(commonIngredients)]; // Remove duplicates
-    uniqueCommonIngredients.forEach(ingredient => {
+  if (duplicatedIngredients.length > 0) {
+    duplicatedIngredients.forEach(ingredient => {
       const listItem = document.createElement('li');
       listItem.textContent = ingredient;
       commonIngredientsList.appendChild(listItem);
