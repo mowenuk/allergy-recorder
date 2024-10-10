@@ -44,7 +44,7 @@ function addOrUpdateReaction() {
 
   const reactionData = {
     product: productInput,
-    ingredients: ingredientsInput.split(',').map(i => i.trim()),
+    ingredients: ingredientsInput.split(',').map(i => i.trim().toLowerCase()),
     severity: parseInt(severityInput),
     notes: notesInput,
     dateTime: new Date(reactionDateInput).toLocaleString(),
@@ -59,8 +59,10 @@ function addOrUpdateReaction() {
 
   clearForm();
   displayReactions();
+  findCommonIngredients(reactionData.ingredients);
 }
 
+// Function to display all reactions
 function displayReactions() {
   const tableBody = document.querySelector("#reactionTable tbody");
   tableBody.innerHTML = '';
@@ -82,6 +84,7 @@ function displayReactions() {
   });
 }
 
+// Function to edit a reaction
 function editReaction(index) {
   const reaction = reactions[index];
   document.getElementById('product').value = reaction.product;
@@ -92,15 +95,47 @@ function editReaction(index) {
   editingReactionId = index;
 }
 
+// Function to delete a reaction
 function deleteReaction(index) {
   reactions.splice(index, 1);
   displayReactions();
 }
 
+// Function to clear the form fields
 function clearForm() {
   document.getElementById('product').value = '';
   document.getElementById('ingredients').value = '';
   document.getElementById('severity').value = '';
   document.getElementById('notes').value = '';
   document.getElementById('reactionDate').value = '';
+}
+
+// Function to find and display common ingredients that appeared in previous reactions
+function findCommonIngredients(newIngredients) {
+  let commonIngredients = [];
+
+  // Loop through previous reactions to find common ingredients
+  reactions.forEach(reaction => {
+    reaction.ingredients.forEach(ingredient => {
+      if (newIngredients.includes(ingredient)) {
+        commonIngredients.push(ingredient);
+      }
+    });
+  });
+
+  // Display common ingredients
+  const commonIngredientsList = document.getElementById('commonIngredientsList');
+  commonIngredientsList.innerHTML = ''; // Clear the previous list
+
+  if (commonIngredients.length > 0) {
+    const uniqueCommonIngredients = [...new Set(commonIngredients)]; // Remove duplicates
+    uniqueCommonIngredients.forEach(ingredient => {
+      const listItem = document.createElement('li');
+      listItem.textContent = ingredient;
+      commonIngredientsList.appendChild(listItem);
+    });
+    document.getElementById('commonIngredients').style.display = 'block';
+  } else {
+    document.getElementById('commonIngredients').style.display = 'none';
+  }
 }
